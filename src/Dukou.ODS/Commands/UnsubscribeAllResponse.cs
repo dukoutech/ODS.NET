@@ -8,6 +8,12 @@ namespace Dukou.ODS.Commands
 {
     public class UnsubscribeAllResponse : ODSResponse
     {
-
+        public bool Success
+        {
+            get
+            {
+                return Status == "0";
+            }
+        }
     }
 }

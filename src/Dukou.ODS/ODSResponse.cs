@@ -26,10 +26,5 @@ namespace Dukou.ODS
                 return Get("1");
             }
         }
-
-        public virtual string GetDescription()
-        {
-            return string.Empty;
-        }
     }
 }

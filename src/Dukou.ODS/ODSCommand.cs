@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Dukou.ODS
 {
-    public class ODSCommand : ODSData
+    public abstract class ODSCommand : ODSData
     {
         public string Command
         {

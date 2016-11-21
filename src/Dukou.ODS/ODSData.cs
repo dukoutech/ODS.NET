@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Dukou.ODS
 {
     /// <summary>
     /// ODS数据
     /// </summary>
-    public class ODSData
+    public abstract class ODSData
     {
         private SortedDictionary<string, string> data = new SortedDictionary<string, string>();
 
@@ -22,7 +20,7 @@ namespace Dukou.ODS
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public string Get(string key)
+        protected string Get(string key)
         {
             if (data.ContainsKey(key))
             {
@@ -30,6 +28,17 @@ namespace Dukou.ODS
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 设置指定KEY值
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="value"></param>
+        protected void Set(string key, string value)
+        {
+            data[key] = value ?? string.Empty;
+            dataChanged = true;
         }
 
         /// <summary>
@@ -49,24 +58,16 @@ namespace Dukou.ODS
         {
             if (!string.IsNullOrEmpty(text))
             {
+                data.Clear();
+                dataChanged = true;
+                dataString = null;
+
                 foreach (var kvStr in text.TrimEnd('\r', '\n').Split('|'))
                 {
                     var kv = kvStr.Split('=');
                     data[kv[0]] = kv[1];
                 }
-                dataChanged = true;
             }
-        }
-
-        /// <summary>
-        /// 设置指定KEY值
-        /// </summary>
-        /// <param name="key"></param>
-        /// <param name="value"></param>
-        public void Set(string key, string value)
-        {
-            data[key] = value ?? string.Empty;
-            dataChanged = true;
         }
 
         public override string ToString()

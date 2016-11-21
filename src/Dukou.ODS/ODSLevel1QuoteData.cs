@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Dukou.ODS
 {
-    public class ODSLevel1Data : ODSData
+    public class ODSLevel1QuoteData : ODSData
     {
         private static DateTime UTC1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 

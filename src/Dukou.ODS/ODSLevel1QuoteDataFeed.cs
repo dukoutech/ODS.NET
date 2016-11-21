@@ -7,11 +7,10 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Dukou.ODS
 {
-    public class ODSLevel1DataFeed : IDisposable
+    public class ODSLevel1QuoteDataFeed : IDisposable
     {
         private static ILog logger = LogManager.GetLogger("ODS");
 
@@ -61,7 +60,7 @@ namespace Dukou.ODS
         /// </summary>
         public int RestartTimes { get; set; }
 
-        public ODSLevel1DataFeed(string ip, int port, string username, string password)
+        public ODSLevel1QuoteDataFeed(string ip, int port, string username, string password)
         {
             ODSServerIP = ip;
             ODSServerPort = port;
@@ -152,6 +151,8 @@ namespace Dukou.ODS
                     {
                         var response = new UnsubscribeResponse();
                         response.Load(responseText);
+
+                        return response.Success;
                     }
                 }
             }
@@ -180,6 +181,8 @@ namespace Dukou.ODS
                 {
                     var response = new UnsubscribeAllResponse();
                     response.Load(responseText);
+
+                    return response.Success;
                 }
             }
             catch (Exception ex)
