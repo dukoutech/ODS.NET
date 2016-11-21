@@ -14,7 +14,9 @@ namespace Dukou.ODS
     {
         private static ILog logger = LogManager.GetLogger("ODS");
 
-        private static char[] packageEndChars = new char[] { '\n' };
+        private static string ODSLEVEL1QUOTEDATAQUEUEKEY = "ODSLEVEL1QUOTEDATA";
+
+        private static char[] PACKAGEENDCHARS = new char[] { '\n' };
 
         private TcpClient client = null;
 
@@ -75,6 +77,20 @@ namespace Dukou.ODS
             ODSResponseTextQueues["ODSLevel1Data"] = new ConcurrentQueue<string>();
 
             RestartTimes = 120;
+        }
+
+        public ODSLevel1QuoteData Dequeue()
+        {
+            string responseText = null;
+            if (ODSResponseTextQueues[ODSLEVEL1QUOTEDATAQUEUEKEY].TryDequeue(out responseText))
+            {
+                var data = new ODSLevel1QuoteData();
+                data.Load(responseText);
+
+                return data;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -200,6 +216,17 @@ namespace Dukou.ODS
         {
             UnsubscribeAll();
 
+            foreach (var item in ODSResponseTextQueues)
+            {
+                if (item.Value.Count > 0)
+                {
+                    while (item.Value.TryDequeue(out string result) && item.Value.Count > 0)
+                    {
+                        logger.Info($"移除数据{result}");
+                    }
+                }
+            }
+
             Started = false;
 
             CloseTcpClient();
@@ -257,25 +284,25 @@ namespace Dukou.ODS
 
                 ODSResponse response = null;
 
-                while (Started)
+                while (ShouldRun())
                 {
-                    if (Started && client.Available == 0)
+                    if (ShouldSleep())
                     {
                         Thread.Sleep(10);
                     }
 
-                    if (Started && client.Available > 0)
+                    if (ShouldReceive())
                     {
                         do
                         {
                             int len = client.GetStream().Read(buffer, 0, bufferSize);
                             sb.Append(Encoding.UTF8.GetString(buffer, 0, len));
-                        } while (Started && client.Available > 0);
+                        } while (ShouldReceive());
                     }
                     if (sb.Length > 0)
                     {
                         var responseText = sb.ToString();
-                        foreach (var item in responseText.Split(packageEndChars, StringSplitOptions.RemoveEmptyEntries))
+                        foreach (var item in responseText.Split(PACKAGEENDCHARS, StringSplitOptions.RemoveEmptyEntries))
                         {
                             response = new ODSResponse();
                             response.Load(item);
@@ -287,8 +314,8 @@ namespace Dukou.ODS
                             }
                             else
                             {
-                                ODSResponseTextQueues["ODSLevel1Data"].Enqueue(item);
-                                logger.Info($"ODSLevel1Data:{item}");
+                                ODSResponseTextQueues[ODSLEVEL1QUOTEDATAQUEUEKEY].Enqueue(item);
+                                logger.Info($"ODSLevel1QuoteData:{item}");
                             }
                         }
 
@@ -349,6 +376,33 @@ namespace Dukou.ODS
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// 应该接收数据
+        /// </summary>
+        /// <returns></returns>
+        private bool ShouldReceive()
+        {
+            return ShouldRun() && client.Available > 0;
+        }
+
+        /// <summary>
+        /// 应该运行
+        /// </summary>
+        /// <returns></returns>
+        private bool ShouldRun()
+        {
+            return Started && client != null;
+        }
+
+        /// <summary>
+        /// 应该睡眠
+        /// </summary>
+        /// <returns></returns>
+        public bool ShouldSleep()
+        {
+            return ShouldRun() && client.Available == 0;
         }
 
     }
